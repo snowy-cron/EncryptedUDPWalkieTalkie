@@ -114,10 +114,14 @@ All tunable constants live at the top of `Program.cs` and inside `VoiceSender.cs
 
 ```
 EncryptedUDPWalkieTalkie/
-├── Program.cs          # Entry point; key derivation; starts sender and receiver
-├── VoiceSender.cs      # Microphone capture, Opus encode, AES encrypt, UDP broadcast
-├── VoiceReceiver.cs    # UDP receive, HMAC verify, AES decrypt, Opus decode, playback
-└── Models.cs           # DataWithHmac — the serialized packet structure
+├── EncryptedUDPWalkieTalkie.slnx
+└── EncryptedUDPWalkieTalkie/
+    ├── EncryptedUDPWalkieTalkie.csproj
+    ├── Program.cs          # Entry point; key derivation; starts sender and receiver
+    ├── CryptoHelper.cs     # Shared HMAC-SHA256 utility
+    ├── VoiceSender.cs      # Microphone capture, Opus encode, AES encrypt, UDP broadcast
+    ├── VoiceReceiver.cs    # UDP receive, HMAC verify, AES decrypt, Opus decode, playback
+    └── Models.cs           # DataWithHmac — the serialized packet structure
 ```
 
 ---

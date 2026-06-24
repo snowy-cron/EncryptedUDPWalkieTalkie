@@ -46,7 +46,7 @@ namespace EncryptedUDPWalkieTalkie
                     var formatted = JsonSerializer.Deserialize<DataWithHmac>(info_encoded_AES);
                     if (formatted == null) continue;
 
-                    if (!VerifyHMAC_SHA256(_key, formatted.data, formatted.hmac)) continue;
+                    if (!VerifyHmacSha256(_key, formatted.data, formatted.hmac)) continue;
 
                     var info = DecryptString(_key, _iv, formatted.data);
 
@@ -62,17 +62,10 @@ namespace EncryptedUDPWalkieTalkie
             }
         }
 
-        private static byte[] CreateHMAC_SHA256(byte[] key, byte[] message)
+        private static bool VerifyHmacSha256(byte[] key, byte[] message, byte[] expected)
         {
-            byte[] dest = new byte[2000];
-            HMACSHA256.TryHashData(key, message, dest, out int bytesWritten);
-            return dest.SkipLast(2000 - bytesWritten).ToArray();
-        }
-
-        private static bool VerifyHMAC_SHA256(byte[] key, byte[] message, byte[] new_hmac)
-        {
-            var old_hmac = CreateHMAC_SHA256(key, message);
-            return old_hmac.SequenceEqual(new_hmac);
+            var actual = CryptoHelper.CreateHmacSha256(key, message);
+            return actual.SequenceEqual(expected);
         }
 
         private static byte[] DecryptString(byte[] key, byte[] iv, byte[] cipherText)

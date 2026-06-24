@@ -15,6 +15,7 @@ namespace EncryptedUDPWalkieTalkie
         private readonly byte[] _key;
         private readonly byte[] _iv;
         private WasapiCapture _wasapiCap;
+        private Socket? _socket;
 
         public VoiceSender(byte[] key, byte[] iv)
         {
@@ -24,8 +25,8 @@ namespace EncryptedUDPWalkieTalkie
 
         public void StartBroadcasting()
         {
-            Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            s.EnableBroadcast = true;
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket.EnableBroadcast = true;
 
             IPEndPoint ep = new IPEndPoint(IPAddress.Broadcast, 25565);
 
@@ -57,10 +58,10 @@ namespace EncryptedUDPWalkieTalkie
                     var encoded = bytes.SkipLast(1000 - encodedBytes).ToArray();
                     var encrypted_AES = EncryptString(encoded, 0, encoded.Length, _key, _iv);
 
-                    DataWithHmac dataWithHmac = new DataWithHmac(encrypted_AES, CreateHMAC_SHA256(_key, encrypted_AES));
+                    DataWithHmac dataWithHmac = new DataWithHmac(encrypted_AES, CryptoHelper.CreateHmacSha256(_key, encrypted_AES));
                     var serializedData = JsonSerializer.SerializeToUtf8Bytes(dataWithHmac);
 
-                    s.SendTo(serializedData, ep);
+                    _socket.SendTo(serializedData, ep);
                 }
             };
 
@@ -72,14 +73,8 @@ namespace EncryptedUDPWalkieTalkie
         {
             _wasapiCap?.StopRecording();
             _wasapiCap?.Dispose();
+            _socket?.Dispose();
             Console.WriteLine("[Sender] Broadcasting stopped.");
-        }
-
-        private static byte[] CreateHMAC_SHA256(byte[] key, byte[] message)
-        {
-            byte[] dest = new byte[2000];
-            HMACSHA256.TryHashData(key, message, dest, out int bytesWritten);
-            return dest.SkipLast(2000 - bytesWritten).ToArray();
         }
 
         private static short[] BytesToShorts(byte[] input, int offset, int length)
